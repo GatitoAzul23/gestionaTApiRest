@@ -7,7 +7,13 @@ const UsuarioSchema = new mongoose.Schema({
         unique:true,
     },
     password:String,
-    nomUsuario:String
+    nomUsuario:String,
+    tipo:String,
+    categoriasIngreso:Array, 
+    //Ingreso (categoria, cantidad, frecuencia)
+    categoriasEgreso:Array, 
+    //Egreso (categoria)
+    saldo:Number,
 });
 
 UsuarioSchema.methods.generadorJWT = function(){

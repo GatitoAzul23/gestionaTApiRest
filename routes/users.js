@@ -33,7 +33,11 @@ router.post('/registro',
     let usuarioNew = new Usuario({
       email : correo.toLowerCase(),
       password : pass_cifrado,
-      usuario: req.body.nomUsuario
+      usuario: req.body.nomUsuario,
+      tipo: "Basico",
+      categoriasIngreso: req.body.categoriasIngreso,
+      categoriasEgreso: req.body.categoriasEgreso,
+      saldo: 0
     });
     await usuarioNew.save();
     res.status(201).send({usuarioNew});
@@ -105,6 +109,7 @@ router.post('/consultar', async(req,res)=>{
   let usu = await Usuario.findOne({email: perfil.email});
   res.send({usu});
 });
+
 
 
 module.exports = router;
