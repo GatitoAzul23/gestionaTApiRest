@@ -30,17 +30,25 @@ router.post('/registro',
     //ciframos la contraseña antes 
     let pass_cifrado = await bcrypt.hash(req.body.password, salt);
     let correo = req.body.email;
+    //console.log(req.body.nomUsuario);
     let usuarioNew = new Usuario({
-      email : correo.toLowerCase(),
+      email : correo,
       password : pass_cifrado,
-      usuario: req.body.nomUsuario,
+      nomUsuario: req.body.nomUsuario,
       tipo: "Basico",
-      categoriasIngreso: req.body.categoriasIngreso,
-      categoriasEgreso: req.body.categoriasEgreso,
-      saldo: 0
+      saldo: 0,
     });
     await usuarioNew.save();
-    res.status(201).send({usuarioNew});
+
+    let usuaNuevo = {
+      email: usuarioNew.email,
+      nomUsuario: usuarioNew.nomUsuario,
+      jwtoken: usuarioNew.generadorJWT(),
+      tipo: usuarioNew.tipo
+    }
+
+    res.status(201).send({usuaNuevo});
+    
   }
 );
 
@@ -57,8 +65,9 @@ router.post('/login',
     }
       let env = {
         email: usu.email,
-        nomUsuario: usu.usuario,
-        jwtoken: usu.generadorJWT()
+        nomUsuario: usu.nomUsuario,
+        jwtoken: usu.generadorJWT(),
+        tipo: usu.tipo,
       }
       return res.send({env});  
   }
@@ -100,6 +109,34 @@ router.put('/actualizar', async (req,res)=>{
   res.send({usu_mod});
 });
 
+
+//? Metodo para CAMBIAR CONTRASEÑA  
+router.put('/categorias', async (req,res)=>{
+  
+  let usua = await Usuario.findOne({email: req.body.email});
+
+  //busqueda del empleado  
+  if(!usua){
+    //si no este return detiene el proceso
+    return res.status(402).send("Usuario no encontrado");
+}
+ 
+  let usu_mod = await Usuario.findOneAndUpdate(
+      //requiere un parametro de filtrado de busqueda
+      {email: req.body.email},
+      //modificacion
+      {
+        categoriasIngreso: req.body.categoriasIngreso,
+        categoriasEgreso: req.body.categoriasEgreso,
+      },
+      //retorna un objeto viejo(false) o nuevo(true)
+      {
+          new: true
+      }
+  );
+  res.send({usu_mod});
+});
+
 //? Metodo de consulta de usuario
 router.post('/consultar', async(req,res)=>{
   let perfil = await Usuario.findOne({email: req.body.email});
@@ -109,6 +146,7 @@ router.post('/consultar', async(req,res)=>{
   let usu = await Usuario.findOne({email: perfil.email});
   res.send({usu});
 });
+
 
 
 

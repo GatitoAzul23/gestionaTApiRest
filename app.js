@@ -18,11 +18,15 @@ mongoose.connect(process.env.MONGODB_URI)
 
 //Listado de los modelos
 require('./models/usuario');
+require('./models/ingreso');
+require('./models/egreso');
 
 
 //declaracion de rutas
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var ingresosRouter = require('./routes/ingresos');
+//var egresosRouter = require('./routes/egresos');
 
 var app = express();
 
@@ -45,6 +49,8 @@ app.use(cors({
 //HACER USO DE LAS RUTAS
 app.use('/', indexRouter);
 app.use('/usuarios', usersRouter);
+app.use('/ingresos', ingresosRouter);
+//app.use('/egresos', egresosRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

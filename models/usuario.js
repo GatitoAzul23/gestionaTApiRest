@@ -10,9 +10,9 @@ const UsuarioSchema = new mongoose.Schema({
     nomUsuario:String,
     tipo:String,
     categoriasIngreso:Array, 
-    //Ingreso (categoria, cantidad, frecuencia)
+    //Ingreso (categoria, cantidad, frecuencia, estatus)
     categoriasEgreso:Array, 
-    //Egreso (categoria)
+    //Egreso (categoria, activo)
     saldo:Number,
 });
 

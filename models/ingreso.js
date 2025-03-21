@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const IngresoSchema = new mongoose.Schema({
     cantidad: Number,
     fecha: Date,
-    categoría: String,
-    descripcion: String, 
+    categoria: String, 
     usuario: String
 });
 
