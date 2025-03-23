@@ -5,7 +5,8 @@ const EgresoSchema = new mongoose.Schema({
     fecha: Date,
     categoria: String,
     descripcion:String,
-    usuario: String
+    usuario: String,
+    detalle:String
 });
 
 mongoose.model('Egreso', EgresoSchema);

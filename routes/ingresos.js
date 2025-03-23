@@ -65,40 +65,56 @@ router.post('/ingreso', async(req,res)=>{
 //     res.status(201).send({ingresos});
 // });
 
-
-router.post('/consultar', async(req,res)=>{
-
+router.post('/consultar', async (req, res) => {
     const fechaActual = new Date();
     const anio = fechaActual.getFullYear();
     const mes = fechaActual.getMonth() + 1; // Meses van de 0 a 11
 
-    
-   //Se debe hacer un parseo de las fechas
+    // Parseo de las fechas
     const year = anio ? parseInt(anio, 10) : new Date().getUTCFullYear();
     const month = parseInt(mes, 10);
-
 
     if (isNaN(month) || month < 1 || month > 12) {
         return res.status(400).send("El mes debe estar entre 01 y 12.");
     }
-    
+
     // Crear las fechas de inicio y fin del mes en UTC
     const fechaInicio = new Date(Date.UTC(year, month - 1, 1)); // El mes es 0-indexado
     const fechaFin = new Date(Date.UTC(year, month, 1)); // Primer día del siguiente mes
 
-    
-
+    // Obtener los ingresos del usuario en el rango de fechas especificado
     let ingresos = await Ingreso.find({
-        usuario: req.body.usuario, 
+        usuario: req.body.usuario,
         fecha: {
-            $gte: fechaInicio, $lt: fechaFin 
+            $gte: fechaInicio, $lt: fechaFin
         }
     });
 
-    
+    let categoriaIngresos = await Usuario.findOne({email: req.body.usuario});
 
-    res.status(201).send({ingresos});
+    // Obtener las categorías de ingresos del usuario
+    const categoriasIngreso = categoriaIngresos.categoriasIngreso;
+    //console.log(categoriasIngreso);
+    // Crear un objeto para almacenar los totales por categoría
+    const totales = {};
+
+    // Iterar sobre las categorías y sumar los ingresos correspondientes
+    categoriasIngreso.forEach(categoriaIngreso => {
+        const categoria = categoriaIngreso.categoria;
+        //console.log(categoria);
+        const ingresosCategoria = ingresos.filter(ingreso => ingreso.categoria === categoria);
+        //console.log(ingresosCategoria);
+        const totalCategoria = ingresosCategoria.reduce((sum, ingreso) => sum + ingreso.cantidad, 0);
+        //console.log(totalCategoria);
+        // Agregar la categoría y su total al objeto `totales`
+        totales[categoria] = totalCategoria;
+        //console.log(totales);
+    });
+
+    // Enviar el objeto `totales` como respuesta
+    res.status(201).send({ totales , ingresos});
 });
+
 
 
 
