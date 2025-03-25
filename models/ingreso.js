@@ -5,7 +5,7 @@ const IngresoSchema = new mongoose.Schema({
     fecha: Date,
     categoria: String, 
     usuario: String,
-    //detalle:String,
+    detalle:String,
 });
 
 mongoose.model('Ingreso', IngresoSchema);

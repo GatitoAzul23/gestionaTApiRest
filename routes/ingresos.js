@@ -14,7 +14,7 @@ router.post('/ingreso', async(req,res)=>{
         categoria : req.body.categoria,
         cantidad : req.body.cantidad,
         fecha: req.body.fecha,
-        descripcion: req.body.descripcion,
+        detalle: req.body.descripcion,
         usuario: req.body.usuario
     });
 
@@ -22,7 +22,7 @@ router.post('/ingreso', async(req,res)=>{
 
     //variables utilizadas para actualizar el saldo del usuario
     let ingreso = req.body.cantidad;
-    console.log(usu);
+    //console.log(usu);
     let saldoFin = usu.saldo + ingreso;
 
     await Usuario.updateOne({email:req.body.usuario}, {saldo:saldoFin}, {new:true});

@@ -30,11 +30,15 @@ router.post('/registro',
     //ciframos la contraseña antes 
     let pass_cifrado = await bcrypt.hash(req.body.password, salt);
     let correo = req.body.email;
+    //let egreso = {categoria: "Otro", estatus: "Activo"};
+    let ingreso = {categoria:"Otro", cantidad:0, frecuencia:"Mensual" ,estatus:"Activo"};
     //console.log(req.body.nomUsuario);
     let usuarioNew = new Usuario({
       email : correo,
       password : pass_cifrado,
       nomUsuario: req.body.nomUsuario,
+      //categoriasEgreso: egreso,
+      categoriasIngreso: ingreso,
       tipo: "Basico",
       saldo: 0,
     });
@@ -126,8 +130,13 @@ router.put('/categorias', async (req,res)=>{
       {email: req.body.email},
       //modificacion
       {
-        categoriasIngreso: req.body.categoriasIngreso,
-        categoriasEgreso: req.body.categoriasEgreso,
+        $push: {
+          categoriasIngreso: req.body.categoriasIngreso,
+          
+        },
+        $set:{
+          categoriasEgreso: req.body.categoriasEgreso
+        }
       },
       //retorna un objeto viejo(false) o nuevo(true)
       {
@@ -137,17 +146,146 @@ router.put('/categorias', async (req,res)=>{
   res.send({usu_mod});
 });
 
-//? Metodo de consulta de usuario
+ //? Metodo de consulta de usuario
+// router.post('/consultar', async(req,res)=>{
+//   let perfil = await Usuario.findOne({email: req.body.email});
+//   if(!perfil){
+//     return res.send("No hay registros");
+//   }
+//   let usu = await Usuario.findOne({email: perfil.email});
+//   res.send({usu});
+// });
+
 router.post('/consultar', async(req,res)=>{
-  let perfil = await Usuario.findOne({email: req.body.email});
-  if(!perfil){
-    return res.send("No hay registros");
+    let usu = await Usuario.findOne({email:req.body.email});
+    if(!usu){
+      return res.send("No hay registros");
+    }
+    const ingresos = usu.categoriasIngreso.filter(
+      categoria => categoria.estatus === 'Activo'
+    );
+    
+    // Corrección 2: Acceder a categoriasEgreso del usuario
+    const egresos = usu.categoriasEgreso.filter(
+      categoria =>  categoria.estatus === 'Activo'
+    );
+
+    // Corrección 3: Estructurar correctamente la respuesta
+    const categoriasFiltradas = {
+      ingreso: ingresos,
+      egreso: egresos
+    };
+    res.send({usu, categoriasFiltradas});
+  });
+
+
+//?Metodo para ver categorias filtradas
+router.post('/verCate', async (req, res) => {
+  try {
+    const usuario = await Usuario.findOne({ email: req.body.email });
+    
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+     // Corrección 1: Filtrar las categorías dentro del objeto usuario
+    const ingresos = usuario.categoriasIngreso.filter(
+      categoria => categoria.categoria !== 'Otro'
+      && categoria.estatus === 'Activo'
+    );
+    
+    // Corrección 2: Acceder a categoriasEgreso del usuario
+    const egresos = usuario.categoriasEgreso.filter(
+      categoria => categoria.categoria !== 'Otro'
+      && categoria.estatus === 'Activo'
+    );
+
+    // Corrección 3: Estructurar correctamente la respuesta
+    const categoriasFiltradas = {
+      Ingresos: ingresos,
+      Egresos: egresos
+    };
+
+    res.send({categoriasFiltradas});
+    //console.log(categoriasFiltradas);
+  } catch (error) {
+    res.status(500).json({ error: "Error al procesar la solicitud" });
   }
-  let usu = await Usuario.findOne({email: perfil.email});
-  res.send({usu});
 });
 
+router.put('/nuevoIngreso', async(req,res)=>{
+  let ingresoAgregar = await Usuario.findOneAndUpdate(
+    //requiere un parametro de filtrado de busqueda
+    {email: req.body.usuario},
+    //modificacion
+    {
+      $push: {
+        categoriasIngreso: req.body.categoriasIngreso, 
+      }
+    },
+    //retorna un objeto viejo(false) o nuevo(true)
+    {
+        new: true
+    }
+  );
+  //console.log(req.body.categoriasIngreso);
+  res.send({ingresoAgregar});
+});
 
+router.put('/nuevoEgreso', async(req,res)=>{
+  let egresoAgregar = await Usuario.findOneAndUpdate(
+    //requiere un parametro de filtrado de busqueda
+    {email: req.body.usuario},
+    //modificacion
+    {
+      $push: {
+        categoriasEgreso: req.body.categoriasEgreso,
+        
+      }
+    },
+    //retorna un objeto viejo(false) o nuevo(true)
+    {
+        new: true
+    }
+  );
+  res.send({egresoAgregar});
+});
+
+router.put('/eliminaIng', async(req,res)=>{
+  let ingresoElimina = await Usuario.findOneAndUpdate(
+    //requiere un parametro de filtrado de busqueda
+    {email: req.body.usuario, 'categoriasIngreso.categoria': req.body.categoria},
+    //modificacion
+    {
+      $set: { 'categoriasIngreso.$.estatus': 'Inactivo' }
+    },
+    //retorna un objeto viejo(false) o nuevo(true)
+    {
+        new: true
+    }
+  );
+  //console.log(req.body.email);
+  //console.log(req.body.categoria);
+  res.send({ingresoElimina});
+});
+
+router.put('/eliminaEgr', async(req,res)=>{
+  let egresoElimina = await Usuario.findOneAndUpdate(
+    //requiere un parametro de filtrado de busqueda
+    {email: req.body.usuario, 'categoriasEgreso.categoria': req.body.categoria},
+    //modificacion
+    {
+      $set: { 'categoriasEgreso.$.estatus': 'Inactivo' }
+    },
+    //retorna un objeto viejo(false) o nuevo(true)
+    {
+        new: true
+    }
+  );
+  //console.log(req.body.email);
+  //console.log(req.body.categoria);
+  res.send({egresoElimina});
+});
 
 
 module.exports = router;
